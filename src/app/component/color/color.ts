@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, signal } from '@angular/core';
 
 @Component({
   imports: [],
@@ -9,14 +9,14 @@ import { Component } from '@angular/core';
 export class Color {
   defaultColor = 'red'
   // L'état : el 7ajet eli tetbadel ou dynamique fel vue
-  color = this.defaultColor;
+  color = signal(this.defaultColor);
 
   changeColor(newColor: HTMLInputElement) {
-    this.color = newColor.value;
+    this.color.set(newColor.value);
     newColor.value = ''
   }
 
   reset() {
-    this.color = this.defaultColor;
+    this.color.set(this.defaultColor);
   }
 }
