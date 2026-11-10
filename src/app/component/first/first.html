@@ -1,5 +1,7 @@
-<p appHighlightOld [hidden]="isHidden">{{ message }}</p>
+<p appRainbow appHighlightOld [hidden]="isHidden">{{ message }}</p>
 
-<div [in]="'red'" [out]="'white'" appHighlightOld (click)="showHide()">cc </div>
-<div [in]="'black'" [out]="'white'" appHighlightOld (click)="showHide()">cc </div>
-<div [in]="'yellow'" [out]="'green'" appHighlightNew (click)="showHide()">cc </div>
+<div appRainbow [in]="'red'" [out]="'white'" appHighlightOld (click)="showHide()">cc </div>
+<div appRainbow [in]="'black'" [out]="'white'" appHighlightOld (click)="showHide()">cc </div>
+<div appRainbow [in]="'yellow'" [out]="'green'" appHighlightNew (click)="showHide()">cc </div>
+
+<input type="text" appRainbow>
