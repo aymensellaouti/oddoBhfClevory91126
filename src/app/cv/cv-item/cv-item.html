@@ -1,4 +1,5 @@
-<img
+<div (click)="onSelectCv()">
+  <img
   src="images/{{cv().path}}"
   alt="{{cv().name}}"
   width="50px"
@@ -6,3 +7,4 @@
   class="rounded-circle"
 >
 {{cv().firstname}} {{cv().name}}
+</div>
