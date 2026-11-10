@@ -41,7 +41,4 @@ export class TtcComponent {
       alert("Ya weldi win machi jebt flouss assez !!")
     }
   })
-  constructor() {
-    effect(() => {});
-  }
 }

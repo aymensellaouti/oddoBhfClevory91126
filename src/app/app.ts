@@ -6,9 +6,10 @@ import { RotatingCard } from './component/rotating-card/rotating-card';
 import { Counter } from './signal/counter/counter';
 import { Som } from './signal/som/som';
 import { TtcComponent } from './signal/ttc/ttc.component';
+import { Pere } from './interatcionInterCompo/pere/pere';
 
 @Component({
-  imports: [First, Color, RotatingCard, Counter, Som, TtcComponent],
+  imports: [First, Color, RotatingCard, Counter, Som, TtcComponent, Pere],
   selector: 'app-root',
   styleUrl: './app.css',
   templateUrl: './app.html',
