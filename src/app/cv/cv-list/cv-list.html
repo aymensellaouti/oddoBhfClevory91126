@@ -1,6 +1,9 @@
 <ol class="list-group">
   @for (cv of cvs(); track cv.id) {
-    <li class="list-group-item">
+    <li [class]="{
+      'list-group-item-secondary': $odd,
+      'list-group-item-primary': $even
+    }" class="list-group-item">
       <app-cv-item (selectCv)="forwardCv.emit($event)" [cv]="cv"/>
     </li>
   }
