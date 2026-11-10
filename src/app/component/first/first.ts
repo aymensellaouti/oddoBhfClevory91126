@@ -1,7 +1,9 @@
 import { Component } from '@angular/core';
+import { HighlightOld } from '../../directives/highlight-old';
+import { HighlightNew } from '../../directives/highlight-new';
 
 @Component({
-  imports: [],
+  imports: [HighlightOld, HighlightNew],
   selector: 'app-first',
   styleUrl: './first.css',
   templateUrl: './first.html',
