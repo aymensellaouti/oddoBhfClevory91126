@@ -1,7 +1,9 @@
-import { Component, signal } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { Cv } from '../model/cv';
 import { CvList } from '../cv-list/cv-list';
 import { CvCard } from '../cv-card/cv-card';
+import { LoggerService } from '../../services/logger.Service';
+import { SayHelloService } from '../../services/say-hello.service';
 
 @Component({
   imports: [CvList, CvCard],
@@ -18,4 +20,12 @@ export class CvPage {
     new Cv(5, 'Znidi', 'Mohamed Ali', 'Dev', '4444', 'rotating_card_profile2.png', 20),
   ]);
   selectedCv = signal<Cv | null>(null);
+  loggerService = inject(LoggerService);
+  //sayHelloService = new SayHelloService();
+  constructor(
+    private sayHelloService: SayHelloService
+    ) {
+    this.loggerService.log('cc je suis le cvComponent');
+    this.sayHelloService.hello();
+  }
 }

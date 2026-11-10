@@ -9,9 +9,10 @@ import { TtcComponent } from './signal/ttc/ttc.component';
 import { Pere } from './interatcionInterCompo/pere/pere';
 import { CvPage } from './cv/cv-page/cv-page';
 import { MiniWordComponent } from './directives/mini-word/mini-word.component';
+import { TodoComponent } from './todo/todo/todo.component';
 
 @Component({
-  imports: [First, Color, RotatingCard, Counter, Som, TtcComponent, Pere, CvPage, MiniWordComponent],
+  imports: [First, Color, RotatingCard, Counter, Som, TtcComponent, Pere, CvPage, MiniWordComponent, TodoComponent],
   selector: 'app-root',
   styleUrl: './app.css',
   templateUrl: './app.html',
