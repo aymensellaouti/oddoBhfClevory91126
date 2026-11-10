@@ -1,6 +1,6 @@
 <div (click)="onSelectCv()">
   <img
-  src="images/{{cv().path}}"
+  src="images/{{cv().path | defaultImage}}"
   alt="{{cv().name}}"
   width="50px"
   heigth="50px"

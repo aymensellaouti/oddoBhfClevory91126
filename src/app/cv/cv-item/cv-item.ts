@@ -1,8 +1,9 @@
 import { Component, input, output } from '@angular/core';
 import { Cv } from '../model/cv';
+import { DefaultImagePipe } from '../../pipes/default-image-pipe';
 
 @Component({
-  imports: [],
+  imports: [DefaultImagePipe],
   selector: 'app-cv-item',
   styleUrl: './cv-item.css',
   templateUrl: './cv-item.html',
