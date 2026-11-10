@@ -5,23 +5,20 @@ import { CvCard } from '../cv-card/cv-card';
 import { LoggerService } from '../../services/logger.Service';
 import { SayHelloService } from '../../services/say-hello.service';
 import { ToastrService } from 'ngx-toastr';
+import { CvService } from '../services/cv.service';
+import { EmbaucheComponent } from '../embauche/embauche.component';
 
 @Component({
-  imports: [CvList, CvCard],
+  imports: [CvList, CvCard, EmbaucheComponent],
   selector: 'app-cv-page',
   styleUrl: './cv-page.css',
   templateUrl: './cv-page.html',
 })
 export class CvPage {
-  cvs = signal<Cv[]>([
-    new Cv(1, 'sellaouti', 'aymen', 'teacher', '12324', '', 44),
-    new Cv(2, 'sellaouti', 'skander', 'student', '4444', '          ', 8),
-    new Cv(3, 'Lamsi', 'Arij', 'Dev', '4444', 'rotating_card_profile.png', 20),
-    new Cv(4, 'Masmoudi', 'Bacem', 'Dev', '4444', 'rotating_card_profile3.png', 20),
-    new Cv(5, 'Znidi', 'Mohamed Ali', 'Dev', '4444', 'rotating_card_profile2.png', 20),
-  ]);
+  cvService = inject(CvService)
+  cvs = this.cvService.getCvs();
   toastr = inject(ToastrService);
-  selectedCv = signal<Cv | null>(null);
+  selectedCv = this.cvService.getSelectedCv();
   loggerService = inject(LoggerService);
   //sayHelloService = new SayHelloService();
   constructor(private sayHelloService: SayHelloService) {

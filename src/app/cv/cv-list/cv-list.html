@@ -4,7 +4,7 @@
       'list-group-item-secondary': $odd,
       'list-group-item-primary': $even
     }" class="list-group-item">
-      <app-cv-item (selectCv)="forwardCv.emit($event)" [cv]="cv"/>
+      <app-cv-item [cv]="cv"/>
     </li>
   }
   @empty {

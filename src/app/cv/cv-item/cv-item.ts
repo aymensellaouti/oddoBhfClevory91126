@@ -1,6 +1,7 @@
-import { Component, input, output } from '@angular/core';
+import { Component, inject, input, output } from '@angular/core';
 import { Cv } from '../model/cv';
 import { DefaultImagePipe } from '../../pipes/default-image-pipe';
+import { CvService } from '../services/cv.service';
 
 @Component({
   imports: [DefaultImagePipe],
@@ -11,10 +12,11 @@ import { DefaultImagePipe } from '../../pipes/default-image-pipe';
 export class CvItem {
   // State
   cv = input.required<Cv>();
-
-  selectCv = output<Cv>();
+  cvService = inject(CvService);
+  size = input(50);
+  // selectCv = output<Cv>();
 
   onSelectCv() {
-    this.selectCv.emit(this.cv());
+    this.cvService.selectCv(this.cv());
   }
 }
