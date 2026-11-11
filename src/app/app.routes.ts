@@ -7,9 +7,11 @@ import { Color } from './component/color/color';
 import { WeekTodoComponent } from './todo/week-todo/week-todo.component';
 import { MiniWordComponent } from './directives/mini-word/mini-word.component';
 import { Hello } from './component/hello/hello';
+import { DetailsCvComponent } from './cv/details-cv/details-cv.component';
 export const routes: Routes = [
   {path: '', component: First},
   {path: 'cv', component: CvPage},
+  {path: 'cv/:id', component: DetailsCvComponent},
   {path: 'todo', component: TodoComponent},
   {path: 'weektodo', component: WeekTodoComponent},
   {path: 'color', component: Color},
