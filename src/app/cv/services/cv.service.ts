@@ -1,5 +1,7 @@
-import {  Injectable, Signal, signal } from '@angular/core';
+import {  inject, Injectable, Signal, signal } from '@angular/core';
 import { Cv } from '../model/cv';
+import { APP_API } from '../../config/api.config';
+import { HttpClient, HttpParams } from '@angular/common/http';
 
 
 
@@ -7,6 +9,7 @@ import { Cv } from '../model/cv';
   providedIn: 'root',
 })
 export class CvService {
+  httpClient = inject(HttpClient);
   #cvs = signal([
     new Cv(1, 'sellaouti', 'aymen', 'teacher', '12324', '', 44),
     new Cv(2, 'sellaouti', 'skander', 'student', '4444', '          ', 8),
@@ -16,7 +19,7 @@ export class CvService {
   ]);
   cvs = this.#cvs.asReadonly();
 
-  #selectedCv = signal<Cv | null>(null)
+  #selectedCv = signal<Cv | null>(null);
   getSelectedCv() {
     return this.#selectedCv.asReadonly();
   }
@@ -28,7 +31,7 @@ export class CvService {
    * Retourne la liste des cvs
    * @returns Cv[]
    */
-  getCvs(): Signal<Cv[]>{
+  getCvs(): Signal<Cv[]> {
     return this.cvs;
   }
 
@@ -40,7 +43,7 @@ export class CvService {
    * @returns Cv | null
    */
   findCvById(id: number): Cv | null {
-    return this.#cvs().find(cv => cv.id == id) ?? null;
+    return this.#cvs().find((cv) => cv.id == id) ?? null;
   }
 
   /**
@@ -52,5 +55,22 @@ export class CvService {
    */
   deleteCv(cv: Cv): void {
     this.#cvs.update((cvs) => cvs.filter((cvE) => cvE != cv));
+  }
+
+  /**
+   *
+   * @returns cvs: Observable Cv[]
+   */
+  getCvsFromApi() {
+    return this.httpClient.get<Cv[]>(APP_API.cv);
+  }
+  getCvByIdFromApi(id: number) {
+    return this.httpClient.get<Cv>(APP_API.cv + id);
+  }
+  deleteCvByIdFromApi(id: number) {
+    const params = new HttpParams().set('njareb', 'haja');
+    return this.httpClient.delete<{count: number}>(APP_API.cv + id, {
+      params
+    });
   }
 }

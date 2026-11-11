@@ -16,7 +16,7 @@ import { EmbaucheComponent } from '../embauche/embauche.component';
 })
 export class CvPage {
   cvService = inject(CvService)
-  cvs = this.cvService.getCvs();
+  cvs = signal<Cv[]>([]);
   toastr = inject(ToastrService);
   selectedCv = this.cvService.getSelectedCv();
   loggerService = inject(LoggerService);
@@ -25,5 +25,15 @@ export class CvPage {
     this.loggerService.log('cc je suis le cvComponent');
     this.sayHelloService.hello();
     this.toastr.info('Bienvenu dans notre CvTech')
+    this.cvService.getCvsFromApi().subscribe({
+      next: (cvs) => {
+        this.cvs.set(cvs);
+      },
+      error: () => {
+        const fakeCvs = this.cvService.getCvs();
+        this.cvs.set(fakeCvs());
+        this.toastr.error("Les données sont fictives veuillez contacter l'admin")
+      }
+    })
   }
 }
