@@ -4,3 +4,7 @@
 @import 'ngx-toastr/toastr';
 
 @import './../public/css/rotating-card.css';
+
+input.ng-invalid.ng-touched {
+  border: solid red 2px
+}

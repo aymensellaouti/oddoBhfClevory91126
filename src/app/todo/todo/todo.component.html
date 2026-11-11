@@ -1,5 +1,8 @@
 <div class="row">
   <div class="col">
+    <div class="alert alert-warning">
+      {{todosApi() | json}}
+    </div>
     <ol class="list-group">
       @for (todo of todos(); track $index) {
         <li

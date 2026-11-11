@@ -9,8 +9,10 @@ import { MiniWordComponent } from './directives/mini-word/mini-word.component';
 import { Hello } from './component/hello/hello';
 import { DetailsCvComponent } from './cv/details-cv/details-cv.component';
 import { Nf404 } from './component/nf404/nf404';
+import { Login } from './auth/login/login';
 export const routes: Routes = [
   {path: '', component: First},
+  {path: 'login', component: Login},
   {path: 'cv', component: CvPage},
   {path: 'cv/:id', component: DetailsCvComponent},
   {path: 'todo', component: TodoComponent},
