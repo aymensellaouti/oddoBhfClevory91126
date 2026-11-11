@@ -8,6 +8,7 @@ import { WeekTodoComponent } from './todo/week-todo/week-todo.component';
 import { MiniWordComponent } from './directives/mini-word/mini-word.component';
 import { Hello } from './component/hello/hello';
 import { DetailsCvComponent } from './cv/details-cv/details-cv.component';
+import { Nf404 } from './component/nf404/nf404';
 export const routes: Routes = [
   {path: '', component: First},
   {path: 'cv', component: CvPage},
@@ -18,5 +19,6 @@ export const routes: Routes = [
   {path: 'word', component: MiniWordComponent},
   // AY route fiha segment wahed hezha el Hello
   {path: 'hello/:name', component: Hello},
+  {path: '**', component: Nf404},
 
 ];
