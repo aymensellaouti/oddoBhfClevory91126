@@ -1,10 +1,11 @@
 import { Component, inject } from "@angular/core";
-import { FormBuilder, Validators, AbstractControl } from "@angular/forms";
+import { FormBuilder, Validators, AbstractControl, ReactiveFormsModule } from "@angular/forms";
 
 @Component({
   selector: 'app-add-cv',
   templateUrl: './add-cv.component.html',
   styleUrls: ['./add-cv.component.css'],
+  imports: [ReactiveFormsModule]
 })
 export class AddCvComponent {
   formBuilder = inject(FormBuilder);

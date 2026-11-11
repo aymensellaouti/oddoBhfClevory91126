@@ -7,7 +7,8 @@ import { FormsModule } from "@angular/forms";
   selector: 'app-todo',
   templateUrl: './todo.component.html',
   styleUrls: ['./todo.component.css'],
-  imports: [FormsModule]
+  imports: [FormsModule],
+  providers:[TodoService]
 
 })
 export class TodoComponent {
