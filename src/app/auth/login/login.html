@@ -8,5 +8,5 @@
     <label for="exampleInputPassword1" class="form-label">Password</label>
     <input type="password" ngModel name="password" required minlength="4" class="form-control" id="exampleInputPassword1">
   </div>
-  <button type="submit" [disabled]="loginForm.invalid" class="btn btn-primary">Submit</button>
+  <button type="submit" (click)="login(loginForm.value)" [disabled]="loginForm.invalid" class="btn btn-primary">Submit</button>
 </form>

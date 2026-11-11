@@ -1,7 +1,8 @@
 import {  inject, Injectable, Signal, signal } from '@angular/core';
 import { Cv } from '../model/cv';
 import { APP_API } from '../../config/api.config';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
+import { APP_CONST } from '../../config/consts.config';
 
 
 
@@ -68,7 +69,8 @@ export class CvService {
     return this.httpClient.get<Cv>(APP_API.cv + id);
   }
   deleteCvByIdFromApi(id: number) {
-    const params = new HttpParams().set('njareb', 'haja');
+    const params = new HttpParams().set(APP_CONST.tokenParamName, localStorage.getItem(APP_CONST.token)?? '');
+    const headers = new HttpHeaders().set(APP_CONST.authHeadersName, localStorage.getItem(APP_CONST.token)?? '');
     return this.httpClient.delete<{count: number}>(APP_API.cv + id, {
       params
     });
