@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RxJS · Flux froid ou flux chaud ?</title>
+<style>
+  :root {
+    --froid: #2f7fd0;
+    --chaud: #e0453a;
+    --encre: #1d2b3a;
+    --gris: #8795a3;
+    --vert: #2e9e5b;
+    --code-bg: #282c34;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: #0e1a28; overflow: hidden;
+    font-family: system-ui, "Segoe UI", Roboto, Arial, sans-serif; }
+  #viewport { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; }
+  #stage { position: relative; flex: none; width: 1280px; height: 720px; overflow: hidden; color: var(--encre);
+    background: radial-gradient(ellipse at 40% 10%, #fbfdff 0%, #e8f0f8 60%, #d8e4f0 100%); }
+  #stage.chaud { background: radial-gradient(ellipse at 40% 10%, #fffaf8 0%, #f8ebe6 60%, #f0dcd5 100%); }
+  .abs { position: absolute; }
+  .mono { font-family: "Cascadia Mono", Consolas, "Courier New", monospace; font-variant-ligatures: none; }
+  .cache { display: none !important; }
+
+  /* En-tête */
+  #titre { left: 30px; top: 12px; font-size: 30px; font-weight: 800; }
+  #sous-titre { left: 32px; top: 54px; width: 1220px; font-size: 15px; color: #4b5d70; }
+  #onglets { left: 700px; top: 14px; display: flex; gap: 8px; }
+  #onglets button { height: 36px; padding: 0 16px; border-radius: 18px; border: 2px solid #b8c6d4; background: #fff;
+    font-size: 15px; font-weight: 700; cursor: pointer; color: #43566a; }
+  #onglets button.on[data-mode="froid"] { background: var(--froid); border-color: var(--froid); color: #fff; }
+  #onglets button.on[data-mode="chaud"] { background: var(--chaud); border-color: var(--chaud); color: #fff; }
+
+  /* Cartes d'acteurs */
+  .acteur { top: 96px; height: 374px; border-radius: 16px; background: #fff; border: 2px solid #cfd9e3;
+    box-shadow: 0 8px 22px rgba(30, 50, 80, .10); }
+  .acteur .etiquette { position: absolute; left: 14px; top: 12px; right: 14px; }
+  .acteur .etiquette .n { display: inline-flex; width: 28px; height: 28px; border-radius: 50%; color: #fff; font-weight: 800;
+    align-items: center; justify-content: center; margin-right: 8px; font-size: 15px; vertical-align: middle; }
+  .acteur .etiquette .t { font-size: 19px; font-weight: 800; letter-spacing: .5px; vertical-align: middle; }
+  .acteur .etiquette .d { font-size: 13px; color: #56687a; margin-top: 6px; line-height: 1.35; }
+  .acteur .rxjs { position: absolute; left: 14px; right: 14px; bottom: 12px; padding: 8px 10px; border-radius: 10px;
+    background: #f1f5f9; font-size: 13px; line-height: 1.35; }
+  .acteur .rxjs b { font-family: Consolas, monospace; }
+  .compteur-exec { position: absolute; left: 14px; right: 14px; bottom: 98px; font-size: 13px; font-weight: 700; color: #33475b; }
+  .compteur-exec span { display: inline-block; min-width: 26px; padding: 1px 8px; border-radius: 10px; color: #fff; text-align: center; margin-left: 4px; }
+
+  #emetteur { left: 30px; width: 280px; border-color: var(--chaud); }
+  #emetteur .n, #diffuseur .n { background: var(--chaud); }
+  #emetteur .t, #diffuseur .t { color: var(--chaud); }
+  #emetteur .compteur-exec span { background: var(--chaud); }
+  #diffuseur { left: 380px; width: 320px; border-color: var(--chaud); }
+  #video { left: 30px; width: 280px; border-color: var(--froid); }
+  #video .n { background: var(--froid); }
+  #video .t { color: var(--froid); }
+  #video .compteur-exec span { background: var(--froid); }
+
+  #illus-emetteur { position: absolute; left: 30px; top: 88px; width: 204px; height: 170px; }
+  .rec { animation: clignote 1s steps(2, start) infinite; }
+  @keyframes clignote { to { visibility: hidden; } }
+
+  #ecran-diffuseur { position: absolute; left: 40px; top: 120px; width: 240px; height: 135px; border-radius: 8px; overflow: hidden;
+    border: 6px solid #2a2f37; background: #000; }
+  #ecran-diffuseur svg { width: 100%; height: 100%; display: block; }
+  #badge-direct { position: absolute; left: 190px; top: 130px; padding: 2px 8px; border-radius: 5px; background: var(--chaud); color: #fff;
+    font-size: 12px; font-weight: 800; letter-spacing: 1px; z-index: 2; }
+  #spectateurs-direct { position: absolute; left: 40px; top: 264px; width: 240px; text-align: center; font-size: 13px; font-weight: 700; color: #5b6b7b; }
+  #perdue { position: absolute; left: 20px; top: 264px; width: 280px !important; width: 240px; text-align: center; font-size: 12px; font-weight: 700; color: var(--chaud);
+    opacity: 0; transition: opacity .3s; }
+  #perdue.on { opacity: 1; }
+  #pied-diffuseur { position: absolute; left: 112px; top: 98px; }
+
+  #pellicule { position: absolute; left: 22px; top: 122px; width: 236px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; }
+  #pellicule .img { position: relative; border-radius: 5px; overflow: hidden; border: 3px solid #2a2f37; height: 46px; }
+  #pellicule .img svg { width: 100%; height: 100%; display: block; }
+
+  /* Lecteurs (flux froid) */
+  .lecteur { left: 390px; width: 300px; height: 92px; border-radius: 14px; background: #fff; border: 2px solid var(--froid);
+    box-shadow: 0 6px 16px rgba(30, 80, 140, .12); padding: 10px 14px; }
+  .lecteur .l1 { font-size: 15px; font-weight: 800; color: var(--froid); }
+  .lecteur .l2 { font-size: 13px; color: #4f6275; margin-top: 4px; }
+  .lecteur .barre { position: absolute; left: 14px; right: 14px; bottom: 14px; height: 8px; border-radius: 4px; background: #e2e9f1; overflow: hidden; }
+  .lecteur .barre i { display: block; height: 100%; width: 0; background: var(--froid); transition: width .4s; }
+  .lecteur.fini { border-color: var(--vert); }
+  .lecteur.fini .l1 { color: var(--vert); }
+  .lecteur.fini .barre i { background: var(--vert); }
+  #titre-lecteurs { left: 390px; top: 74px; width: 300px; text-align: center; font-size: 12px; font-weight: 800; letter-spacing: 1px; color: var(--froid); }
+
+  /* Spectateurs */
+  .spectateur { left: 790px; width: 460px; height: 108px; border-radius: 14px; background: #fff; border: 2px solid #cfd9e3;
+    box-shadow: 0 6px 16px rgba(30, 50, 80, .10); transition: border-color .3s, box-shadow .3s; }
+  .spectateur.abonne { border-color: var(--accent); box-shadow: 0 0 0 3px var(--halo), 0 6px 16px rgba(30, 50, 80, .10); }
+  .spectateur .ecran { position: absolute; left: 10px; top: 8px; width: 160px; height: 90px; border-radius: 6px; overflow: hidden;
+    border: 4px solid #2a2f37; background: #39424d; color: #c6d0da; font-size: 12px; font-weight: 700; display: flex;
+    align-items: center; justify-content: center; text-align: center; padding: 6px; }
+  .spectateur .ecran svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .spectateur .nom { position: absolute; left: 184px; top: 10px; font-size: 18px; font-weight: 800; }
+  .spectateur .etat { position: absolute; left: 184px; top: 36px; right: 140px; font-size: 12px; color: #5b6b7b; line-height: 1.3; }
+  .spectateur .etat b.rate { color: var(--chaud); }
+  .spectateur button { position: absolute; right: 10px; top: 10px; width: 126px; height: 30px; white-space: nowrap; border-radius: 8px; border: 2px solid var(--accent);
+    background: #fff; color: var(--accent); font-weight: 800; font-size: 13px; cursor: pointer; }
+  .spectateur.abonne button { background: var(--accent); color: #fff; }
+  .spectateur .recu { position: absolute; left: 184px; bottom: 9px; right: 10px; display: flex; gap: 4px; align-items: center; flex-wrap: nowrap; overflow: hidden; }
+  .spectateur .recu .lib { font-size: 11px; font-weight: 700; color: #6b7a89; margin-right: 2px; }
+  .chip { min-width: 20px; height: 20px; border-radius: 6px; background: var(--accent); color: #fff; font-size: 12px; font-weight: 800;
+    display: inline-flex; align-items: center; justify-content: center; padding: 0 4px; animation: pop .3s; }
+  .chip.fin { background: var(--vert); }
+  @keyframes pop { from { transform: scale(.3); } to { transform: scale(1); } }
+
+  /* Fils et cartes en mouvement */
+  #fils { position: absolute; left: 0; top: 0; width: 1280px; height: 720px; pointer-events: none; }
+  .carte { position: absolute; left: 0; top: 0; width: 64px; height: 36px; border-radius: 4px; overflow: hidden; border: 2px solid #fff;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, .3); z-index: 6; will-change: transform; }
+  .carte svg { width: 100%; height: 100%; display: block; }
+
+  /* Bas : code et à retenir */
+  #code { left: 30px; top: 482px; width: 670px; height: 138px; border-radius: 12px; background: var(--code-bg); padding: 10px 0; }
+  #code .ligne { font-size: 13px; line-height: 17px; color: #abb2bf; padding: 0 14px; white-space: pre; border-left: 4px solid transparent; transition: background .25s; }
+  #code .ligne.on { background: rgba(97, 175, 239, .17); border-left-color: #61afef; }
+  .k { color: #c678dd; } .f { color: #61afef; } .n { color: #d19a66; } .s { color: #98c379; } .c { color: #7f848e; font-style: italic; } .v { color: #e06c75; } .ty { color: #e5c07b; }
+  #retenir { left: 790px; top: 482px; width: 460px; height: 138px; border-radius: 12px; background: #fff; border: 2px solid var(--accent);
+    padding: 10px 14px; font-size: 14px; line-height: 1.4; }
+  #retenir .t { font-size: 12px; font-weight: 800; letter-spacing: 1px; color: var(--accent); margin-bottom: 4px; }
+
+  /* Narration et contrôles */
+  #narration { left: 30px; top: 630px; width: 1220px; height: 44px; border-radius: 10px; background: #13314f; color: #fff;
+    font-size: 17px; display: flex; align-items: center; padding: 0 18px; }
+  #stage.chaud #narration { background: #4a1d19; }
+  #narration b { color: #ffd479; }
+  #controles { left: 30px; top: 682px; width: 1220px; height: 32px; display: flex; gap: 10px; align-items: center; }
+  #controles button, #controles select { height: 30px; border-radius: 8px; border: 1px solid #a9b8c7; background: #fff;
+    font-size: 14px; padding: 0 12px; cursor: pointer; color: var(--encre); }
+  #controles button.on { background: var(--encre); color: #fff; }
+  #controles .aide { margin-left: auto; font-size: 12px; color: #55687b; }
+  #horloge { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+</style>
+</head>
+<body>
+<div id="viewport">
+<div id="stage">
+  <div id="titre" class="abs">RxJS · Flux froid ou flux chaud ?</div>
+  <div id="onglets" class="abs">
+    <button data-mode="froid">Flux froid : vidéo enregistrée</button>
+    <button data-mode="chaud">Flux chaud : vidéo en direct</button>
+  </div>
+  <div id="sous-titre" class="abs"></div>
+
+  <!-- Flux froid : la vidéo enregistrée -->
+  <div id="video" class="abs acteur scene-froid">
+    <div class="etiquette">
+      <div><span class="n">1</span><span class="t">LA VIDÉO</span></div>
+      <div class="d">Une vidéo YouTube classique, enregistrée : toutes les images existent déjà. Rien ne se passe tant que personne n'appuie sur lecture.</div>
+    </div>
+    <div id="pellicule"></div>
+    <div class="compteur-exec">Exécutions (lectures lancées) :<span id="exec-froid">0</span></div>
+    <div class="rxjs">En RxJS : un <b>Observable</b> froid. Sa fonction est relancée à <b>chaque</b> <b>subscribe()</b>.</div>
+  </div>
+  <div id="titre-lecteurs" class="abs scene-froid">UNE LECTURE PAR ABONNÉ</div>
+
+  <!-- Flux chaud : l'émetteur et le diffuseur -->
+  <div id="emetteur" class="abs acteur scene-chaud">
+    <div class="etiquette">
+      <div><span class="n">1</span><span class="t">L'ÉMETTEUR</span></div>
+      <div class="d">La personne qui filme. Elle produit les images, qu'il y ait des spectateurs ou non.</div>
+    </div>
+    <svg id="illus-emetteur" viewBox="0 0 240 200">
+      <ellipse cx="80" cy="192" rx="62" ry="6" fill="#000" opacity=".08"/>
+      <rect x="58" y="150" width="18" height="42" rx="6" fill="#2b3a4c"/>
+      <rect x="84" y="150" width="18" height="42" rx="6" fill="#2b3a4c"/>
+      <rect x="46" y="74" width="68" height="88" rx="24" fill="#d9483d"/>
+      <circle cx="80" cy="46" r="24" fill="#f1c7a1"/>
+      <path d="M56 44 Q58 18 82 20 Q104 22 104 42 Q92 32 74 34 Q62 36 56 44Z" fill="#3a2a22"/>
+      <path d="M104 92 L150 78" stroke="#f1c7a1" stroke-width="13" stroke-linecap="round"/>
+      <path d="M100 112 L148 96" stroke="#c43c32" stroke-width="13" stroke-linecap="round"/>
+      <rect x="140" y="64" width="64" height="42" rx="8" fill="#2f3a46"/>
+      <rect x="150" y="54" width="22" height="12" rx="3" fill="#2f3a46"/>
+      <circle cx="204" cy="85" r="15" fill="#1b2430" stroke="#7c8b9b" stroke-width="4"/>
+      <circle cx="204" cy="85" r="6" fill="#4a90d9"/>
+      <circle class="rec" cx="152" cy="40" r="6" fill="#e0453a"/>
+      <text class="rec" x="162" y="45" font-size="14" font-weight="800" fill="#e0453a">REC</text>
+      <path d="M222 70 L238 62 M224 85 L240 85 M222 100 L238 108" stroke="#e0453a" stroke-width="3" stroke-linecap="round" opacity=".7"/>
+    </svg>
+    <div class="compteur-exec">Exécutions :<span>1</span> seule, partagée</div>
+    <div class="rxjs">En RxJS : le <b>producteur</b>, la source qui appelle <b>next()</b> (caméra, clics, WebSocket...).</div>
+  </div>
+
+  <div id="diffuseur" class="abs acteur scene-chaud">
+    <div class="etiquette">
+      <div><span class="n">2</span><span class="t">LE DIFFUSEUR</span></div>
+      <div class="d">La chaîne YouTube Live ou la télé. Il reçoit chaque image <b>une seule fois</b> et la diffuse à tous, au même moment.</div>
+    </div>
+    <div id="badge-direct">EN DIRECT</div>
+    <div id="ecran-diffuseur"></div>
+    <div id="spectateurs-direct">0 spectateur</div>
+    <div id="perdue">personne ne regarde : image perdue</div>
+    <div class="rxjs">En RxJS : un <b>Subject</b>, ou l'opérateur <b>share()</b>, qui partage <b>une seule</b> exécution entre tous les abonnés.</div>
+  </div>
+
+  <svg id="fils"></svg>
+  <div id="lecteurs"></div>
+  <div id="spectateurs"></div>
+
+  <div id="code" class="abs mono"></div>
+  <div id="retenir" class="abs"></div>
+
+  <div id="narration" class="abs"></div>
+  <div id="controles" class="abs">
+    <button id="btn-demo" class="on">Démo commentée</button>
+    <button id="btn-libre">Mode libre</button>
+    <button id="btn-pause">Pause</button>
+    <button id="btn-rejouer">Rejouer</button>
+    <select id="vitesse">
+      <option value="0.5">Vitesse 0,5×</option>
+      <option value="1" selected>Vitesse 1×</option>
+      <option value="1.5">Vitesse 1,5×</option>
+      <option value="2">Vitesse 2×</option>
+    </select>
+    <span class="aide">Mode libre : abonnez et désabonnez les spectateurs vous-même. Clavier : Espace = pause, R = rejouer</span>
+  </div>
+  <div id="horloge"></div>
+</div>
+</div>
+
+<script>
+(() => {
+  'use strict';
+  const $ = (id) => document.getElementById(id);
+  const stage = $('stage');
+  function ajuster() { stage.style.transform = `scale(${Math.min(innerWidth / 1280, innerHeight / 720)})`; }
+  addEventListener('resize', ajuster);
+  ajuster();
+
+  // ---------- Constantes de mise en page ----------
+  const LIGNES = [165, 285, 405];              // centres verticaux des 3 spectateurs
+  const X_SPECT = 790;
+  const E = { x: 310, y: 230 };                 // sortie de l'émetteur
+  const D_IN = { x: 380, y: 230 }, D_OUT = { x: 700, y: 230 };
+  const ECRAN_D = { x: 540, y: 230 };           // centre de l'écran du diffuseur
+  const NB_IMAGES_VIDEO = 6;
+  const PERSONNES = [
+    { nom: 'Amine' }, { nom: 'Sarra' }, { nom: 'Youssef' }
+  ];
+
+  // ---------- Image de la vidéo n (le soleil avance d'une image à l'autre) ----------
+  function scene(n) {
+    const t = ((n - 1) % 8) / 7;
+    const sx = 22 + t * 116, sy = 58 - Math.sin(t * Math.PI) * 40;
+    return `<svg viewBox="0 0 160 90" preserveAspectRatio="xMidYMid slice">
+      <rect width="160" height="90" fill="#a9d8f7"/>
+      <circle cx="${sx.toFixed(1)}" cy="${sy.toFixed(1)}" r="11" fill="#ffc83d"/>
+      <path d="M0 70 Q40 52 80 68 T160 62 V90 H0Z" fill="#62b86a"/>
+      <path d="M0 80 Q50 70 100 80 T160 78 V90 H0Z" fill="#3f9a4a"/>
+      <rect x="4" y="4" width="34" height="20" rx="4" fill="rgba(0,0,0,.6)"/>
+      <text x="21" y="19" text-anchor="middle" font-size="14" font-weight="800" fill="#fff" font-family="Segoe UI, Arial">${n}</text>
+    </svg>`;
+  }
+
+  // ---------- Horloge (Web Animations : pause, vitesse, annulation) ----------
+  const horloge = $('horloge');
+  let vitesse = 1, enPause = false, run = 0;
+  const ABANDON = Symbol('abandon');
+  function suivre(a, monRun) {
+    a.playbackRate = vitesse;
+    if (enPause) a.pause();
+    return a.finished.then(() => { if (monRun !== run) throw ABANDON; }, () => { throw ABANDON; });
+  }
+  const attendre = (ms, monRun) => suivre(horloge.animate([{ opacity: 0 }, { opacity: 0 }], { duration: ms }), monRun);
+
+  // Carte d'image qui voyage d'un point à un autre (éventuellement via un point intermédiaire)
+  function voyage(n, points, ms, monRun) {
+    const c = document.createElement('div');
+    c.className = 'carte';
+    c.innerHTML = scene(n);
+    stage.appendChild(c);
+    const kf = points.map((p, i) => ({ transform: `translate(${p.x - 32}px, ${p.y - 18}px)`, offset: i / (points.length - 1) }));
+    kf[0].opacity = 0; kf[1] = Object.assign({}, kf[1], { opacity: 1 });
+    return suivre(c.animate(kf, { duration: ms, easing: 'ease-in-out', fill: 'forwards' }), monRun)
+      .finally(() => c.remove());
+  }
+
+  // ---------- Fils (SVG) ----------
+  const NS = 'http://www.w3.org/2000/svg';
+  const fils = $('fils');
+  function fil(id, d) {
+    const p = document.createElementNS(NS, 'path');
+    p.setAttribute('id', id);
+    p.setAttribute('d', d);
+    p.setAttribute('fill', 'none');
+    fils.appendChild(p);
+    return p;
+  }
+  function styleFil(p, actif, couleur) {
+    p.setAttribute('stroke', actif ? couleur : '#c3ccd5');
+    p.setAttribute('stroke-width', actif ? 4 : 2);
+    p.setAttribute('stroke-dasharray', actif ? '' : '6 6');
+  }
+
+  // ---------- État ----------
+  let mode = 'froid', demo = true;
+  let spect = [];            // { abonne, idx, recu, termine, lecture, el, lecteurEl }
+  let direct = 0;            // dernière image émise en direct
+  let execFroid = 0;
+
+  function narrer(html) {
+    $('narration').innerHTML = `<span>${html}</span>`;
+    $('narration').animate([{ opacity: .2 }, { opacity: 1 }], { duration: 300 });
+  }
+  function surligner(...ids) { document.querySelectorAll('#code .ligne').forEach(l => l.classList.toggle('on', ids.includes(l.id))); }
+
+  const TEXTES = {
+    froid: {
+      sous: 'Flux froid : comme une vidéo YouTube enregistrée. Chaque spectateur qui appuie sur lecture déclenche sa propre lecture, depuis le début.',
+      code: [
+        ['f1', '<span class="k">const</span> <span class="v">video$</span> = <span class="k">new</span> <span class="ty">Observable</span>&lt;<span class="ty">Image</span>&gt;(abonne =&gt; {'],
+        ['f2', '  <span class="k">const</span> lecteur = <span class="f">lireVideo</span>(<span class="s">\'cours.mp4\'</span>);   <span class="c">// une lecture PAR abonné</span>'],
+        ['f3', '  lecteur.<span class="f">onImage</span> = image =&gt; abonne.<span class="f">next</span>(image);'],
+        ['f4', '  lecteur.<span class="f">onFin</span> = () =&gt; abonne.<span class="f">complete</span>();'],
+        ['f5', '});'],
+        ['f6', '<span class="v">video$</span>.<span class="f">subscribe</span>(amine);   <span class="c">// lecture n°1, depuis l\'image 1</span>'],
+        ['f7', '<span class="v">video$</span>.<span class="f">subscribe</span>(sarra);   <span class="c">// lecture n°2, depuis l\'image 1 aussi</span>']
+      ],
+      retenir: '<div class="t">À RETENIR : FLUX FROID</div>Le producteur est <b>créé à chaque subscribe()</b>. Chaque abonné a sa propre exécution : il commence au début et ne rate rien, mais rien n\'est partagé.<br><span style="color:#5b6b7b">Exemples : <b>HttpClient</b>, <b>of()</b>, <b>from()</b>, <b>interval()</b>.</span>'
+    },
+    chaud: {
+      sous: 'Flux chaud : comme une vidéo en direct. L\'émetteur filme en continu, le diffuseur transmet la même image à tous les spectateurs connectés.',
+      code: [
+        ['h1', '<span class="k">const</span> <span class="v">direct$</span> = <span class="k">new</span> <span class="ty">Subject</span>&lt;<span class="ty">Image</span>&gt;();              <span class="c">// le diffuseur</span>'],
+        ['h2', 'camera.<span class="f">onImage</span> = image =&gt; <span class="v">direct$</span>.<span class="f">next</span>(image);     <span class="c">// l\'émetteur</span>'],
+        ['h3', '<span class="v">direct$</span>.<span class="f">subscribe</span>(amine);     <span class="c">// voit les images à partir de maintenant</span>'],
+        ['h4', '<span class="v">direct$</span>.<span class="f">subscribe</span>(youssef);   <span class="c">// arrivé en retard : a raté le début</span>'],
+        ['h5', '<span class="c">// Variante courante : const direct$ = camera$.pipe(share());</span>']
+      ],
+      retenir: '<div class="t">À RETENIR : FLUX CHAUD</div>Le producteur <b>existe sans les abonnés</b>. Un émetteur, un diffuseur, une seule exécution : tous voient <b>la même image au même moment</b>, et qui arrive en retard rate le début.<br><span style="color:#5b6b7b">Exemples : <b>fromEvent</b>, <b>Subject</b>, <b>WebSocket</b>, <b>share()</b>.</span>'
+    }
+  };
+
+  // ---------- Construction d'une scène ----------
+  function construire() {
+    stage.getAnimations({ subtree: true }).forEach(a => { if (!(a instanceof CSSAnimation)) a.cancel(); });
+    document.querySelectorAll('.carte').forEach(c => c.remove());
+    const chaud = mode === 'chaud';
+    const accent = chaud ? 'var(--chaud)' : 'var(--froid)';
+    const halo = chaud ? 'rgba(224,69,58,.22)' : 'rgba(47,127,208,.22)';
+    stage.classList.toggle('chaud', chaud);
+    stage.style.setProperty('--accent', accent);
+    stage.style.setProperty('--halo', halo);
+    document.querySelectorAll('.scene-froid').forEach(e => e.classList.toggle('cache', chaud));
+    document.querySelectorAll('.scene-chaud').forEach(e => e.classList.toggle('cache', !chaud));
+    document.querySelectorAll('#onglets button').forEach(b => b.classList.toggle('on', b.dataset.mode === mode));
+
+    const T = TEXTES[mode];
+    $('sous-titre').textContent = T.sous;
+    $('code').innerHTML = T.code.map(([id, h]) => `<div class="ligne" id="${id}">${h}</div>`).join('');
+    $('retenir').innerHTML = T.retenir;
+
+    // Pellicule de la vidéo enregistrée
+    $('pellicule').innerHTML = Array.from({ length: NB_IMAGES_VIDEO }, (_, i) => `<div class="img">${scene(i + 1)}</div>`).join('');
+    $('exec-froid').textContent = '0';
+    execFroid = 0;
+
+    // Diffuseur
+    direct = 0;
+    $('ecran-diffuseur').innerHTML = '';
+    $('perdue').classList.remove('on');
+
+    // Fils
+    fils.innerHTML = '';
+    if (chaud) {
+      styleFil(fil('f-ed', `M${E.x} ${E.y} L${D_IN.x} ${D_IN.y}`), true, '#e0453a');
+      LIGNES.forEach((y, i) => fil('f-ds' + i, `M${D_OUT.x} ${D_OUT.y} C${D_OUT.x + 50} ${D_OUT.y} ${X_SPECT - 50} ${y} ${X_SPECT} ${y}`));
+    } else {
+      LIGNES.forEach((y, i) => {
+        fil('f-vl' + i, `M310 ${E.y + 60} C350 ${E.y + 60} 350 ${y} 390 ${y}`);
+        fil('f-ls' + i, `M690 ${y} L${X_SPECT} ${y}`);
+      });
+    }
+
+    // Spectateurs et lecteurs
+    $('spectateurs').innerHTML = '';
+    $('lecteurs').innerHTML = '';
+    spect = PERSONNES.map((p, i) => {
+      const el = document.createElement('div');
+      el.className = 'abs spectateur';
+      el.style.top = (LIGNES[i] - 54) + 'px';
+      el.innerHTML = `<div class="ecran">écran éteint</div><div class="nom">${p.nom}</div>
+        <div class="etat">non abonné</div><button>S'abonner</button>
+        <div class="recu"><span class="lib">reçues :</span></div>`;
+      $('spectateurs').appendChild(el);
+      const s = { nom: p.nom, i, abonne: false, idx: 0, recu: [], termine: false, lecture: 0, el, lecteurEl: null };
+      el.querySelector('button').onclick = () => (s.abonne ? desabonner(s, true) : abonner(s, true));
+      if (!chaud) {
+        const l = document.createElement('div');
+        l.className = 'abs lecteur cache';
+        l.style.top = (LIGNES[i] - 46) + 'px';
+        l.innerHTML = '<div class="l1"></div><div class="l2"></div><div class="barre"><i></i></div>';
+        $('lecteurs').appendChild(l);
+        s.lecteurEl = l;
+      }
+      return s;
+    });
+    majFils();
+    majCompteurDirect();
+  }
+
+  function majFils() {
+    spect.forEach((s, i) => {
+      if (mode === 'chaud') styleFil($('f-ds' + i), s.abonne, '#e0453a');
+      else { styleFil($('f-vl' + i), s.abonne, '#2f7fd0'); styleFil($('f-ls' + i), s.abonne, '#2f7fd0'); }
+    });
+  }
+  function majCompteurDirect() {
+    const n = spect.filter(s => s.abonne).length;
+    $('spectateurs-direct').textContent = n + (n > 1 ? ' spectateurs' : ' spectateur');
+  }
+  function ecran(s, html) { s.el.querySelector('.ecran').innerHTML = html; }
+  function etat(s, html) { s.el.querySelector('.etat').innerHTML = html; }
+  function viderRecu(s) { s.el.querySelector('.recu').innerHTML = '<span class="lib">reçues :</span>'; }
+  function ajouterChip(s, txt, fin) {
+    const c = document.createElement('span');
+    c.className = 'chip' + (fin ? ' fin' : '');
+    c.textContent = txt;
+    const r = s.el.querySelector('.recu');
+    r.appendChild(c);
+    const chips = r.querySelectorAll('.chip');
+    if (chips.length > 8) {
+      chips[0].remove();
+      if (!r.querySelector('.etc')) { const e = document.createElement('span'); e.className = 'lib etc'; e.textContent = '…'; r.insertBefore(e, r.children[1]); }
+    }
+  }
+
+  // ---------- Abonnement / désabonnement ----------
+  function abonner(s, manuel) {
+    if (s.abonne) return;
+    s.abonne = true; s.recu = []; s.idx = 0; s.termine = false;
+    s.el.classList.add('abonne');
+    s.el.querySelector('button').textContent = 'Se désabonner';
+    viderRecu(s);
+    if (mode === 'chaud') {
+      surligner(s.i === 2 ? 'h4' : 'h3');
+      ecran(s, 'en attente de la prochaine image du direct');
+      etat(s, direct > 0
+        ? `abonné en cours de direct<br><b class="rate">a raté ${direct > 1 ? 'les images 1 à ' + direct : "l'image 1"}</b>`
+        : 'abonné avant le début du direct');
+      majCompteurDirect();
+    } else {
+      execFroid++;
+      s.lecture = execFroid;
+      $('exec-froid').textContent = execFroid;
+      $('exec-froid').animate([{ transform: 'scale(1.5)' }, { transform: 'scale(1)' }], { duration: 400 });
+      surligner(s.i === 0 ? 'f6' : 'f7', 'f2');
+      ecran(s, 'lecture depuis le début...');
+      etat(s, `lecture n°${s.lecture} lancée pour ${s.nom}`);
+      const l = s.lecteurEl;
+      l.classList.remove('cache', 'fini');
+      l.querySelector('.l1').textContent = `Lecture n°${s.lecture} · ${s.nom}`;
+      l.querySelector('.l2').textContent = `image 0 / ${NB_IMAGES_VIDEO}`;
+      l.querySelector('.barre i').style.width = '0';
+      l.animate([{ opacity: 0, transform: 'scale(.9)' }, { opacity: 1, transform: 'scale(1)' }], { duration: 350 });
+    }
+    majFils();
+    if (manuel && demo) passerEnLibre();
+  }
+  function desabonner(s, manuel) {
+    if (!s.abonne) return;
+    s.abonne = false;
+    s.el.classList.remove('abonne');
+    s.el.querySelector('button').textContent = s.termine ? 'Revoir' : "S'abonner";
+    if (!s.termine) {
+      ecran(s, 'désabonné');
+      etat(s, mode === 'chaud' ? 'a quitté le direct (le direct continue)' : 'lecture arrêtée');
+      if (s.lecteurEl) s.lecteurEl.classList.add('cache');
+    }
+    if (mode === 'chaud') majCompteurDirect();
+    majFils();
+    if (manuel && demo) passerEnLibre();
+  }
+
+  // ---------- Un « tic » : une image avance ----------
+  async function ticChaud(monRun) {
+    direct++;
+    const n = direct;
+    surligner('h2');
+    $('perdue').classList.remove('on');
+    $('spectateurs-direct').style.visibility = '';
+    await voyage(n, [E, { x: (E.x + D_IN.x) / 2, y: E.y }, D_IN], 650, monRun);
+    $('ecran-diffuseur').innerHTML = scene(n);
+    const cibles = spect.filter(s => s.abonne);
+    if (!cibles.length) {
+      $('perdue').textContent = `personne ne regarde : l'image ${n} est perdue`;
+      $('perdue').classList.add('on');
+      $('spectateurs-direct').style.visibility = 'hidden';
+      return;
+    }
+    await Promise.all(cibles.map(s => voyage(n, [D_OUT, { x: D_OUT.x + 50, y: D_OUT.y + (LIGNES[s.i] - D_OUT.y) * .2 },
+      { x: X_SPECT - 50, y: LIGNES[s.i] }, { x: X_SPECT + 10, y: LIGNES[s.i] }], 750, monRun)));
+    cibles.forEach(s => {
+      if (!s.abonne) return;
+      ecran(s, scene(n));
+      s.recu.push(n);
+      ajouterChip(s, n);
+    });
+  }
+
+  async function ticFroid(monRun) {
+    const actifs = spect.filter(s => s.abonne && !s.termine);
+    if (!actifs.length) return;
+    actifs.forEach(s => { s.idx++; });
+    await Promise.all(actifs.map(s => voyage(s.idx, [{ x: 300, y: E.y + 60 }, { x: 350, y: (E.y + 60 + LIGNES[s.i]) / 2 },
+      { x: 400, y: LIGNES[s.i] }, { x: 540, y: LIGNES[s.i] }, { x: X_SPECT + 10, y: LIGNES[s.i] }], 1000, monRun)));
+    actifs.forEach(s => {
+      if (!s.abonne) return;
+      ecran(s, scene(s.idx));
+      s.recu.push(s.idx);
+      ajouterChip(s, s.idx);
+      const l = s.lecteurEl;
+      l.querySelector('.l2').textContent = `image ${s.idx} / ${NB_IMAGES_VIDEO}`;
+      l.querySelector('.barre i').style.width = (100 * s.idx / NB_IMAGES_VIDEO) + '%';
+      if (s.idx === NB_IMAGES_VIDEO) {
+        s.termine = true;
+        ajouterChip(s, 'complete', true);
+        etat(s, `fin de la lecture n°${s.lecture} : le flux envoie <b>complete</b>`);
+        l.classList.add('fini');
+        l.querySelector('.l1').textContent = `Lecture n°${s.lecture} · ${s.nom} · terminée`;
+        desabonner(s, false);
+      }
+    });
+  }
+
+  // ---------- Scripts des démos commentées (clé = numéro du tic) ----------
+  const SCRIPTS = {
+    froid: {
+      1: () => { abonner(spect[0]); narrer('<b>Amine</b> appuie sur lecture : <b>une lecture démarre pour lui</b>, depuis l\'image 1.'); },
+      3: () => { abonner(spect[1]); narrer('<b>Sarra</b> appuie sur lecture plus tard : <b>une deuxième lecture</b> démarre, elle aussi depuis l\'image 1. Amine, lui, en est à l\'image 3.'); },
+      5: () => { abonner(spect[2]); narrer('<b>Youssef</b> arrive encore plus tard : troisième lecture, depuis le début. <b>3 abonnés = 3 exécutions</b> du producteur.'); },
+      7: () => narrer('La vidéo d\'<b>Amine</b> est finie : son flux envoie <b>complete</b>. Les autres lectures continuent, chacune à son rythme.'),
+      9: () => narrer('Personne n\'a raté une image, mais <b>rien n\'est partagé</b> : chaque abonné a sa propre lecture.'),
+      11: () => narrer('<b>Flux froid</b> : le producteur est créé à chaque <b>subscribe()</b>. Comparez maintenant avec l\'onglet <b>Flux chaud</b>.'),
+      fin: 12
+    },
+    chaud: {
+      1: () => narrer('<b>L\'émetteur</b> filme : chaque image part vers <b>le diffuseur</b>, <b>même si personne ne regarde</b>.'),
+      3: () => { abonner(spect[0]); narrer('<b>Amine</b> s\'abonne : il voit le direct à partir de l\'image 3. Les images 1 et 2 sont perdues pour lui.'); },
+      4: () => { abonner(spect[1]); narrer('<b>Sarra</b> s\'abonne : elle voit <b>la même image, au même moment</b> qu\'Amine.'); },
+      6: () => { abonner(spect[2]); narrer('<b>Youssef</b> arrive en retard : il rejoint le direct en cours et <b>a raté les images 1 à 5</b>.'); },
+      8: () => { desabonner(spect[0]); narrer('<b>Amine</b> quitte le direct : il continue pour les autres. L\'émetteur ne s\'arrête pas pour autant.'); },
+      10: () => narrer('<b>Un émetteur, un diffuseur, une seule exécution</b> : tous voient la même image, au même moment.'),
+      fin: 12
+    }
+  };
+
+  async function boucle(monRun) {
+    let tic = 0;
+    let script = demo ? SCRIPTS[mode] : null;
+    if (!demo) narrer(mode === 'chaud'
+      ? '<b>Mode libre</b> : le direct tourne. Abonnez et désabonnez les spectateurs quand vous voulez.'
+      : '<b>Mode libre</b> : abonnez un spectateur pour lancer sa lecture. Chaque abonnement relance la vidéo depuis le début.');
+    else narrer(mode === 'chaud' ? 'Le direct va commencer...' : 'La vidéo est en ligne. Personne ne la regarde encore.');
+    await attendre(1200, monRun);
+    while (true) {
+      tic++;
+      if (!demo) script = null;
+      if (script && script.fin === tic) { surligner(); return; }
+      if (script && script[tic]) script[tic]();
+      await (mode === 'chaud' ? ticChaud(monRun) : ticFroid(monRun));
+      await attendre(mode === 'chaud' ? 700 : 600, monRun);
+    }
+  }
+
+  function lancer() {
+    run++;
+    const monRun = run;
+    construire();
+    boucle(monRun).catch(e => { if (e !== ABANDON) console.error(e); });
+  }
+  function passerEnLibre() {
+    demo = false;
+    $('btn-demo').classList.remove('on');
+    $('btn-libre').classList.add('on');
+    narrer('<b>Mode libre</b> : la démo commentée est arrêtée, vous pilotez les abonnements.');
+  }
+
+  // ---------- Contrôles ----------
+  document.querySelectorAll('#onglets button').forEach(b => b.onclick = () => {
+    mode = b.dataset.mode;
+    if (enPause) basculerPause();
+    lancer();
+  });
+  $('btn-demo').onclick = () => { demo = true; $('btn-demo').classList.add('on'); $('btn-libre').classList.remove('on'); if (enPause) basculerPause(); lancer(); };
+  $('btn-libre').onclick = () => { demo = false; $('btn-libre').classList.add('on'); $('btn-demo').classList.remove('on'); if (enPause) basculerPause(); lancer(); };
+  function basculerPause() {
+    enPause = !enPause;
+    stage.getAnimations({ subtree: true }).forEach(a => {
+      if (a instanceof CSSAnimation) return;
+      enPause ? a.pause() : a.play();
+    });
+    $('btn-pause').textContent = enPause ? 'Reprendre' : 'Pause';
+  }
+  $('btn-pause').onclick = basculerPause;
+  $('btn-rejouer').onclick = () => { if (enPause) basculerPause(); lancer(); };
+  $('vitesse').onchange = (e) => {
+    vitesse = parseFloat(e.target.value);
+    stage.getAnimations({ subtree: true }).forEach(a => { if (!(a instanceof CSSAnimation)) a.playbackRate = vitesse; });
+  };
+  addEventListener('keydown', (e) => {
+    if (e.code === 'Space') { e.preventDefault(); basculerPause(); }
+    else if (e.key === 'r' || e.key === 'R') $('btn-rejouer').click();
+  });
+
+  // Ouverture directe sur un onglet : flux-froid-flux-chaud.html#chaud
+  if (location.hash === '#chaud') mode = 'chaud';
+  lancer();
+})();
+</script>
+</body>
+</html>
