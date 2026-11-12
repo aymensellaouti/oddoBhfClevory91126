@@ -1,1 +1,10 @@
 <p>single-todo works!</p>
+@if (!todoResource.isLoading()) {
+  {{todoResource.value()?.todo}}
+  <p>
+    <button (click)="id.update(val =>val-1)" [disabled]="id() == 1" class="btn btn-danger">Previous</button>
+    <button (click)="id.update(val =>val+1)" class="btn btn-success">Next</button>
+  </p>
+} @else {
+  <div class="alert alert-info">Loading...</div>
+}

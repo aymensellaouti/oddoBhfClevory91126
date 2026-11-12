@@ -1,7 +1,7 @@
-import { inject, Injectable, Signal, signal } from "@angular/core";
+import { inject, Injectable, Signal, signal, WritableSignal } from "@angular/core";
 import { Todo } from "../model/todo";
 import { LoggerService } from "../../services/logger.Service";
-import { HttpClient } from "@angular/common/http";
+import { HttpClient, httpResource } from "@angular/common/http";
 import { APP_API } from "../../config/api.config";
 
 export interface TodoApi {
@@ -20,6 +20,11 @@ export class TodoService {
   loggerService = inject(LoggerService);
   todos = this.#todos.asReadonly();
   httpClient = inject(HttpClient);
+  //todosResource = httpResource(() => APP_API.todos)
+
+  getTodoResource(id: WritableSignal<number>) {
+    return httpResource<TodoApi|null>(() => APP_API.todos + id(), {defaultValue: null})
+  }
   /**
    * elle retourne la liste des todos
    *

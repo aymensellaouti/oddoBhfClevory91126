@@ -1,4 +1,5 @@
-import { Component } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
+import { TodoService } from '../service/todo.service';
 
 @Component({
   imports: [],
@@ -6,4 +7,8 @@ import { Component } from '@angular/core';
   styleUrl: './single-todo.css',
   templateUrl: './single-todo.html',
 })
-export class SingleTodo {}
+export class SingleTodo {
+  todoService = inject(TodoService);
+  id = signal(1);
+  todoResource = this.todoService.getTodoResource(this.id);
+}
