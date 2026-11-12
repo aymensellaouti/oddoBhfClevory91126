@@ -17,6 +17,7 @@ import { EmbaucheComponent } from '../embauche/embauche.component';
 export class CvPage {
   cvService = inject(CvService)
   cvs = signal<Cv[]>([]);
+  isLoading = signal(true);
   toastr = inject(ToastrService);
   selectedCv = this.cvService.getSelectedCv();
   loggerService = inject(LoggerService);
@@ -27,6 +28,7 @@ export class CvPage {
     this.toastr.info('Bienvenu dans notre CvTech')
     this.cvService.getCvsFromApi().subscribe({
       next: (cvs) => {
+        this.isLoading.set(false);
         this.cvs.set(cvs);
       },
       error: () => {

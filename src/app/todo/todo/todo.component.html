@@ -1,8 +1,18 @@
 <div class="row">
   <div class="col">
-    <div class="alert alert-warning">
+    @if (todosRessource.isLoading()) {
+      <div class="alert alert-warning">
+        Loading...
+      </div>
+    } @else {
+      <div class="alert alert-warning">
+        {{todosRessource.value() | json}}
+      </div>
+    }
+    <div class="alert alert-dark">
       {{todosApi() | json}}
     </div>
+
     <ol class="list-group">
       @for (todo of todos(); track $index) {
         <li

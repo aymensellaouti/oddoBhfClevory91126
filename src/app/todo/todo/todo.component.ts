@@ -4,7 +4,7 @@ import { TodoApi, TodoService } from "../service/todo.service";
 import { FormsModule } from "@angular/forms";
 import { AsyncPipe, JsonPipe } from "@angular/common";
 import { tap, timer } from "rxjs";
-import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
+import { rxResource, takeUntilDestroyed, toSignal } from "@angular/core/rxjs-interop";
 
 @Component({
   selector: 'app-todo',
@@ -15,15 +15,20 @@ import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 })
 export class TodoComponent {
   todoService = inject(TodoService);
-  todosApi = signal<TodoApi[]>([]);
+  todosApi = toSignal(this.todoService.getTodoApiList(), {
+    initialValue: []
+  });
+  todosRessource = rxResource({
+    stream: () => this.todoService.getTodoApiList(),
+  });
   todo = signal(new Todo());
   todos = this.todoService.getTodos();
-  timer$ = timer(0, 2000).pipe(tap(data => console.log({data})));
+  timer$ = timer(0, 2000).pipe(tap((data) => console.log({ data })));
   //todosApi$ = this.todoService.getTodoApiList();
   constructor() {
-    this.todoService.getTodoApiList().subscribe({
-      next: (todos) => (this.todosApi.set(todos)),
-    });
+    // this.todoService.getTodoApiList().subscribe({
+    //   next: (todos) => this.todosApi.set(todos),
+    // });
     // this.timer$.pipe(takeUntilDestroyed()).subscribe({
     //   next: (data) => console.log(data),
     // });
