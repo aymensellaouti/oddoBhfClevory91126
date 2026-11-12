@@ -71,6 +71,27 @@ export class CvService {
   deleteCvByIdFromApi(id: number) {
     // const params = new HttpParams().set(APP_CONST.tokenParamName, localStorage.getItem(APP_CONST.token)?? '');
     // const headers = new HttpHeaders().set(APP_CONST.authHeadersName, localStorage.getItem(APP_CONST.token)?? '');
-    return this.httpClient.delete<{count: number}>(APP_API.cv + id);
+    return this.httpClient.delete<{ count: number }>(APP_API.cv + id);
+  }
+  /**
+   * Recherche les cvs dont le name contient la chaine name passée en paramètre
+   * @param name : string
+   * @returns cvs Cv[]
+   */
+  selectByName(name: string) {
+    const search = `{"where":{"name":{"like":"%${name}%"}}}`;
+    const params = new HttpParams().set('filter', search);
+    return this.httpClient.get<any>(APP_API.cv, { params });
+  }
+  /**
+   * Recherche les cvs dont la valeur est égale à la chaine passée en paramètre
+   * @param property : string, la propriété sur laquelle on va requeter
+   * @param value : string, la valeur de la propriété sur laquelle on va requeter
+   * @returns cvs Cv[]
+   */
+  selectByProperty(property: string, value: string) {
+    const search = `{"where":{"${property}":"${value}"}}`;
+    const params = new HttpParams().set('filter', search);
+    return this.httpClient.get<Cv[]>(APP_API.cv, { params });
   }
 }
