@@ -4,6 +4,7 @@ import { CvService } from "../services/cv.service";
 import { DefaultImagePipe } from "../../pipes/default-image-pipe";
 import { Router } from "@angular/router";
 import { APP_ROUTES } from "../../config/routes.config";
+import { AuthService } from "../../auth/services/auth-service";
 
 @Component({
   selector: 'app-details-cv',
@@ -13,6 +14,7 @@ import { APP_ROUTES } from "../../config/routes.config";
 })
 export class DetailsCvComponent implements OnInit{
   cvService = inject(CvService);
+  authService = inject(AuthService);
   id = input.required<number>();
   //cv = computed(() => this.cvService.findCvById(this.id()));
   cv = signal<Cv | null>(null)
