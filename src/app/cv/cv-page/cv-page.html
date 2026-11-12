@@ -1,4 +1,4 @@
-<div class="row">
+<div #divElement class="row">
   @if (cvsResources.isLoading()) {
     <div class="alert alert-info">
       Loading...
@@ -9,5 +9,12 @@
   <div class="col"><app-cv-card [cv]="selectedCv()"/></div>
 </div>
 <div>
-  <app-embauche/>
+  @defer (on hover(); prefetch on interaction(divElement) ) {
+    <app-embauche />
+  } @placeholder {
+    <div>Placeholder...</div>
+  } @loading {
+    Loading...
+  }
+
 </div>
