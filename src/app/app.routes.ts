@@ -10,6 +10,9 @@ export const routes: Routes = [
   { path: 'login', loadComponent: () => import('./auth/login/login').then((m) => m.Login) },
   {
     path: 'cv',
+    data: {
+      preload: true
+    },
     loadComponent: () =>
       import('./cv/cv-page/cv-page').then((moduleDansLeSensJs) => moduleDansLeSensJs.CvPage),
   },
