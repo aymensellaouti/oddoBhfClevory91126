@@ -1,5 +1,6 @@
 import { Component, inject } from "@angular/core";
 import { FormBuilder, Validators, AbstractControl, ReactiveFormsModule } from "@angular/forms";
+import { debounceTime } from "rxjs";
 
 @Component({
   selector: 'app-add-cv',
@@ -12,7 +13,7 @@ export class AddCvComponent {
 
   form = this.formBuilder.group(
     {
-      name: ['', Validators.required],
+      name: ['', {validatiors:Validators.required, updateOn: 'blur'}],
       firstname: ['', Validators.required],
       path: [''],
       job: ['', Validators.required],
@@ -36,7 +37,13 @@ export class AddCvComponent {
       updateOn: 'change',
     }
   );
-  constructor() {}
+  constructor() {
+    this.name.valueChanges
+    // .pipe(debounceTime(500))
+    .subscribe({
+      next:(val) => console.log(val)
+    })
+  }
   addCv() {
   }
 
