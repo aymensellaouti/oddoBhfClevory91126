@@ -42,6 +42,12 @@ export class AddCvComponent {
     // .pipe(debounceTime(500))
     .subscribe({
       next:(val) => console.log(val)
+    });
+    this.age.valueChanges.subscribe({
+      next: (age) => {
+        if(age>=18) this.path?.enable()
+        else this.path?.disable()
+      }
     })
   }
   addCv() {
