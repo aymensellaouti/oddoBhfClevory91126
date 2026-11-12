@@ -69,10 +69,8 @@ export class CvService {
     return this.httpClient.get<Cv>(APP_API.cv + id);
   }
   deleteCvByIdFromApi(id: number) {
-    const params = new HttpParams().set(APP_CONST.tokenParamName, localStorage.getItem(APP_CONST.token)?? '');
-    const headers = new HttpHeaders().set(APP_CONST.authHeadersName, localStorage.getItem(APP_CONST.token)?? '');
-    return this.httpClient.delete<{count: number}>(APP_API.cv + id, {
-      params
-    });
+    // const params = new HttpParams().set(APP_CONST.tokenParamName, localStorage.getItem(APP_CONST.token)?? '');
+    // const headers = new HttpHeaders().set(APP_CONST.authHeadersName, localStorage.getItem(APP_CONST.token)?? '');
+    return this.httpClient.delete<{count: number}>(APP_API.cv + id);
   }
 }
